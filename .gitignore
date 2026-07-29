@@ -7,6 +7,8 @@ env/
 .env
 allure-results/
 allure-report/
+reports/
+test-results/
 results.xml
 .coverage
 *.log
