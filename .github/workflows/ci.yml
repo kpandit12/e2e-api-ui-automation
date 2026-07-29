@@ -114,7 +114,10 @@ jobs:
 
       - name: Run UI tests
         run: |
-          pytest tests/ui -q --tb=short --alluredir=reports/allure-results
+          pytest tests/ui -v --tb=long \
+            --tracing retain-on-failure \
+            --video retain-on-failure \
+            --alluredir=reports/allure-results
 
       - name: Upload Allure results
         if: always()
@@ -122,3 +125,11 @@ jobs:
         with:
           name: allure-results-ui
           path: reports/allure-results
+
+      - name: Upload Playwright traces & videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-ui
+          path: test-results/
+          if-no-files-found: ignore
