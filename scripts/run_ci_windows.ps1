@@ -48,11 +48,18 @@ try {
     Write-Host "Running mypy..."
     mypy .
 
+    New-Item -ItemType Directory -Path "reports" -ErrorAction SilentlyContinue | Out-Null
+
     Write-Host "Running API tests..."
-    pytest tests/api/unit tests/api/integration tests/api/contract -q --tb=short --alluredir=reports/allure-results
+    pytest tests/api/unit tests/api/integration tests/api/contract `
+      -q --tb=short --alluredir=reports/allure-results --junitxml=reports/junit-api.xml `
+      --cov=clients --cov=core --cov=dao --cov=utils --cov=builders --cov=models --cov=pages `
+      --cov-report=term-missing --cov-report=xml:reports/coverage.xml
 
     Write-Host "Running UI tests..."
-    pytest tests/ui -q --tb=short --alluredir=reports/allure-results
+    pytest tests/ui -q --tb=short `
+      --tracing retain-on-failure --video retain-on-failure `
+      --alluredir=reports/allure-results --junitxml=reports/junit-ui.xml
 
     Write-Host "All checks passed."
 } finally {

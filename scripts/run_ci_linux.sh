@@ -43,11 +43,17 @@ ruff check .
 echo "Running mypy..."
 mypy .
 
+mkdir -p reports
+
 echo "Running API tests..."
 pytest tests/api/unit tests/api/integration tests/api/contract \
-  -q --tb=short --alluredir=reports/allure-results
+  -q --tb=short --alluredir=reports/allure-results --junitxml=reports/junit-api.xml \
+  --cov=clients --cov=core --cov=dao --cov=utils --cov=builders --cov=models --cov=pages \
+  --cov-report=term-missing --cov-report=xml:reports/coverage.xml
 
 echo "Running UI tests..."
-pytest tests/ui -q --tb=short --alluredir=reports/allure-results
+pytest tests/ui -q --tb=short \
+  --tracing retain-on-failure --video retain-on-failure \
+  --alluredir=reports/allure-results --junitxml=reports/junit-ui.xml
 
 echo "All checks passed."

@@ -17,7 +17,7 @@ from pages.product_page import ProductPage
 def test_searching_for_a_known_product_shows_results(product_page: ProductPage) -> None:
     product_page.open()
     product_page.search("apple")
-    assert product_page.result_count() > 0
+    expect(product_page.product_cards.first).to_be_visible()
 
 
 @allure.feature("Shopping UI")
@@ -40,4 +40,8 @@ def test_searching_for_nonsense_shows_no_results(product_page: ProductPage) -> N
     product_page.open()
     # A random UUID string is extremely unlikely to match any product data.
     product_page.search(str(uuid.uuid4()))
-    assert product_page.result_count() == 0
+    expect(
+        product_page.product_cards.filter(
+            has=product_page.page.get_by_role("button", name="Add to Basket")
+        )
+    ).to_have_count(0)
