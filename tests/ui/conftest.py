@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import allure
 import pytest
 from playwright.sync_api import Page
 
@@ -64,3 +65,26 @@ def product_page(page: Page, ui_base_url: str) -> ProductPage:
 @pytest.fixture()
 def basket_page(page: Page, ui_base_url: str) -> BasketPage:
     return BasketPage(page, ui_base_url)
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item: Any, call: Any) -> Any:
+    """Attach a screenshot and page HTML to the Allure report on failure."""
+    outcome = yield
+    report = outcome.get_result()
+    if report.when == "call" and report.failed:
+        page: Page | None = item.funcargs.get("page")
+        if page is not None:
+            try:
+                allure.attach(
+                    page.screenshot(full_page=True),
+                    name="failure_screenshot",
+                    attachment_type=allure.attachment_type.PNG,
+                )
+                allure.attach(
+                    page.content(),
+                    name="page_html",
+                    attachment_type=allure.attachment_type.HTML,
+                )
+            except Exception:
+                pass
