@@ -39,6 +39,9 @@ class RegistrationPage(BasePage):
         # select trigger, failing Playwright's actionability check even
         # though the element is genuinely clickable.
         self.security_question_select.click(force=True)
-        self.page.locator("mat-option").first.click()
+        # Scope to the opened dropdown panel. The DOM also contains hidden
+        # mat-options from other selects (e.g. language), so a global
+        # page.locator("mat-option").first can timeout.
+        self.page.locator(".cdk-overlay-pane mat-option").first.click()
         self.security_answer_input.fill(security_answer)
         self.submit_button.click()

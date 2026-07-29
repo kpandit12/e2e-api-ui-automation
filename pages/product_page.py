@@ -37,8 +37,14 @@ class ProductPage(BasePage):
         return self
 
     def result_count(self) -> int:
-        """Number of product cards currently displayed."""
-        return self.product_cards.count()
+        """Number of product cards currently displayed.
+
+        Filters out any placeholder/no-results cards by requiring an
+        "Add to Basket" button.
+        """
+        return self.product_cards.filter(
+            has=self.page.get_by_role("button", name="Add to Basket")
+        ).count()
 
     def add_to_basket_by_name(self, product_name: str) -> None:
         """Click "Add to Basket" on the card matching ``product_name``."""

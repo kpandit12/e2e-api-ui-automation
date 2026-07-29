@@ -30,9 +30,15 @@ def browser_name() -> str:
 def browser_type_launch_args(
     browser_type_launch_args: dict[str, Any],
 ) -> dict[str, Any]:
-    """Respect ``QA_HEADLESS`` from Settings instead of pytest-playwright's default."""
+    """Respect ``QA_HEADLESS`` from Settings and add CI-friendly Chromium args."""
     settings = get_settings()
-    return {**browser_type_launch_args, "headless": settings.headless}
+    args: list[str] = browser_type_launch_args.get("args", [])
+    if settings.browser == "chromium":
+        # GitHub Actions / Docker runners often cannot use the default Chrome
+        # sandbox. These flags are harmless in headless CI and have no effect
+        # on locally headed runs if the user disables them via the CLI.
+        args = [*args, "--no-sandbox", "--disable-setuid-sandbox"]
+    return {**browser_type_launch_args, "headless": settings.headless, "args": args}
 
 
 @pytest.fixture()
