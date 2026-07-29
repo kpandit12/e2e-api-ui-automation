@@ -4,7 +4,7 @@
 ruff==0.8.4
 mypy==1.14.0
 pre-commit==4.0.1
-mutmut==2.5.1
+mutmut==3.6.0
 pytest-cov==6.0.0
 types-jsonschema==4.23.0.20240813
 
