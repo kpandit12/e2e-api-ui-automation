@@ -257,7 +257,7 @@ jobs:
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         continue-on-error: true
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
       - name: Add Allure report link to summary
         if: always()
         run: |
