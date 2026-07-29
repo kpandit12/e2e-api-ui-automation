@@ -89,6 +89,18 @@ module = [
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
+# coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["clients", "core", "dao", "utils", "models", "builders", "pages"]
+omit = ["*/.venv/*", "*/venv/*", "*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 70
+
+# ---------------------------------------------------------------------------
 # mutmut (mutation testing of the framework's own code, not the tests)
 # ---------------------------------------------------------------------------
 [tool.mutmut]

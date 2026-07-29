@@ -1,4 +1,5 @@
 """E2E: log in through the real UI, including the negative path."""
+
 from __future__ import annotations
 
 import allure
@@ -20,7 +21,9 @@ def test_login_with_valid_credentials_reaches_account_menu(
 ) -> None:
     new_user = UserBuilder().build()
     user_dao.register(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     login_page.open()
@@ -36,7 +39,9 @@ def test_login_with_wrong_password_shows_error(
 ) -> None:
     new_user = UserBuilder().build()
     user_dao.register(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     login_page.open()

@@ -1,4 +1,5 @@
 """Unit tests for the RestClient against a mocked transport."""
+
 from typing import Any
 
 import pytest

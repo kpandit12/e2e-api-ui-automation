@@ -9,6 +9,7 @@ module talks to ``requests`` directly; the DAO layer calls ``RestClient``.
 Retry policy, request logging and (optionally) the auth token are supplied by
 *composition* so each concern stays independently swappable and testable.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -106,9 +107,7 @@ class RestClient:
 
     def _auth_header(self) -> dict[str, str]:
         if self.__token is None:
-            raise TransportError(
-                "authenticated request attempted but no token is set"
-            )
+            raise TransportError("authenticated request attempted but no token is set")
         return {"Authorization": f"Bearer {self.__token}"}
 
     def request(

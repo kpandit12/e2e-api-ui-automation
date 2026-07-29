@@ -7,6 +7,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   QA_PROFILE: ci
   QA_API_BASE_URL: http://localhost:3000
@@ -16,116 +20,173 @@ env:
   PYTHON_VERSION: "3.10"
 
 jobs:
-  static-checks:
+  pre-commit:
+    name: Pre-commit checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Cache pre-commit hooks
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Install project dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Ruff
+  static-checks:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install project dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run ruff linter
         run: ruff check .
-
-      - name: MyPy
+      - name: Run mypy type checker
         run: mypy .
 
   api-tests:
+    name: API tests (unit + integration + contract)
     runs-on: ubuntu-latest
-    needs: static-checks
+    needs: [pre-commit, static-checks]
     services:
       juice-shop:
-        image: bkimminich/juice-shop
+        image: bkimminich/juice-shop:v20.1.1
         ports:
           - 3000:3000
     steps:
-      - uses: actions/checkout@v4
-
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
+          cache: pip
+      - name: Install project dependencies
         run: |
-          python -m pip install --upgrade pip
+          echo "::group::pip install"
           pip install -r requirements-dev.txt
-
+          echo "::endgroup::"
       - name: Wait for Juice Shop
-        run: |
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:3000/rest/products/search?q=apple && break
-            echo "Waiting for Juice Shop..."
-            sleep 2
-          done
-
+        uses: ./.github/actions/wait-for-juice-shop
       - name: Run API tests
         run: |
           pytest tests/api/unit tests/api/integration tests/api/contract \
-            -q --tb=short --alluredir=reports/allure-results
-
+            -q --tb=short \
+            --alluredir=reports/allure-results \
+            --junitxml=reports/junit-api.xml \
+            --cov=clients --cov=core --cov=dao --cov=utils \
+            --cov=builders --cov=models --cov=pages \
+            --cov-report=term-missing --cov-report=xml:reports/coverage.xml
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-api
           path: reports/allure-results
+      - name: Upload JUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-api
+          path: reports/junit-api.xml
+          if-no-files-found: ignore
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-api
+          path: reports/coverage.xml
+          if-no-files-found: ignore
+      - name: Test summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: reports/junit-api.xml
+      - name: Add job summary
+        if: always()
+        run: |
+          echo "## API Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- JUnit: reports/junit-api.xml" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage: reports/coverage.xml" >> $GITHUB_STEP_SUMMARY
+          echo "- Allure: see allure-report job" >> $GITHUB_STEP_SUMMARY
 
   ui-tests:
+    name: UI E2E tests (Playwright)
     runs-on: ubuntu-latest
-    needs: static-checks
+    needs: [pre-commit, static-checks]
+    env:
+      DEBIAN_FRONTEND: noninteractive
     services:
       juice-shop:
-        image: bkimminich/juice-shop
+        image: bkimminich/juice-shop:v20.1.1
         ports:
           - 3000:3000
     steps:
-      - uses: actions/checkout@v4
-
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
+          cache: pip
+      - name: Install project dependencies
         run: |
-          python -m pip install --upgrade pip
+          echo "::group::pip install"
           pip install -r requirements-dev.txt
-
+          echo "::endgroup::"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
       - name: Install Playwright browser & deps
+        timeout-minutes: 10
         run: |
+          echo "::group::Install Chromium"
           playwright install chromium
+          echo "::endgroup::"
+          echo "::group::Install system dependencies"
           playwright install-deps chromium
-
+          echo "::endgroup::"
       - name: Wait for Juice Shop
-        run: |
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:3000/rest/products/search?q=apple && break
-            echo "Waiting for Juice Shop..."
-            sleep 2
-          done
-
+        uses: ./.github/actions/wait-for-juice-shop
       - name: Run UI tests
         run: |
-          pytest tests/ui -v --tb=long \
+          pytest tests/ui -q --tb=short \
             --tracing retain-on-failure \
             --video retain-on-failure \
-            --alluredir=reports/allure-results
-
+            --alluredir=reports/allure-results \
+            --junitxml=reports/junit-ui.xml
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-ui
           path: reports/allure-results
-
+      - name: Upload JUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-ui
+          path: reports/junit-ui.xml
+          if-no-files-found: ignore
       - name: Upload Playwright traces & videos
         if: failure()
         uses: actions/upload-artifact@v4
@@ -133,3 +194,73 @@ jobs:
           name: playwright-traces-ui
           path: test-results/
           if-no-files-found: ignore
+      - name: Test summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: reports/junit-ui.xml
+      - name: Add job summary
+        if: always()
+        run: |
+          echo "## UI Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- JUnit: reports/junit-ui.xml" >> $GITHUB_STEP_SUMMARY
+          echo "- Traces/Videos: uploaded on failure" >> $GITHUB_STEP_SUMMARY
+          echo "- Allure: see allure-report job" >> $GITHUB_STEP_SUMMARY
+
+  allure-report:
+    name: Generate and publish Allure report
+    runs-on: ubuntu-latest
+    needs: [api-tests, ui-tests]
+    if: always()
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          path: reports/allure-results
+          pattern: allure-results-*
+          merge-multiple: true
+      - name: Install Allure CLI
+        run: |
+          echo "::group::Download and unpack Allure"
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+          tar -xzf allure-2.29.0.tgz
+          echo "$PWD/allure-2.29.0/bin" >> "$GITHUB_PATH"
+          echo "::endgroup::"
+      - name: Generate Allure report
+        run: |
+          allure generate reports/allure-results -o reports/allure-report --clean
+      - name: Upload Allure report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: reports/allure-report
+      - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: actions/configure-pages@v5
+      - name: Upload report to Pages
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports/allure-report
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        continue-on-error: true
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Add Allure report link to summary
+        if: always()
+        run: |
+          echo "## Test Reports" >> $GITHUB_STEP_SUMMARY
+          echo "- [Allure Report](https://kpandit12.github.io/e2e-api-ui-automation/)" >> $GITHUB_STEP_SUMMARY
+          echo "- Page URL: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY

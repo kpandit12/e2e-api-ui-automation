@@ -1,4 +1,5 @@
 """Product/basket-related Pydantic models."""
+
 from pydantic import BaseModel
 
 

@@ -1,4 +1,5 @@
 """Unit tests for the auth DAO against a mocked transport."""
+
 import pytest
 import responses
 
@@ -58,9 +59,7 @@ def test_login_raises_authentication_error_on_401() -> None:
 @pytest.mark.unit
 @responses.activate
 def test_login_raises_api_error_on_unexpected_status() -> None:
-    responses.add(
-        responses.POST, f"{BASE_URL}/rest/user/login", json={}, status=500
-    )
+    responses.add(responses.POST, f"{BASE_URL}/rest/user/login", json={}, status=500)
     with pytest.raises(ApiError) as exc:
         auth_dao.login(_client(), "a@b.com", "pw")
     assert exc.value.is_server_error()

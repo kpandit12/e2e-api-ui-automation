@@ -1,4 +1,5 @@
 """Page Object for the Juice Shop login screen (``/#/login``)."""
+
 from __future__ import annotations
 
 from playwright.sync_api import Page

@@ -3,6 +3,7 @@
 ``with_unique_email()`` bakes a uuid into the local-part so parallel test
 workers (pytest-xdist) never collide on the same email.
 """
+
 from __future__ import annotations
 
 import uuid

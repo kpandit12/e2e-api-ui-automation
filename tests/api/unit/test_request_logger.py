@@ -1,4 +1,5 @@
 """Unit tests for token masking in the request logger."""
+
 import pytest
 
 from core.request_logger import mask_headers, mask_value

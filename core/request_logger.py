@@ -4,6 +4,7 @@ Used by ``RestClient`` so logging is swappable and independently testable.
 Sensitive material (auth tokens, cookies) is masked before anything is emitted
 or attached to a report.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

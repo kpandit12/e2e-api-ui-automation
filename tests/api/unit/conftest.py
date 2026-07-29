@@ -5,6 +5,7 @@ builders) against a mocked transport using the ``responses`` library, so they
 run in milliseconds with no network. A ``NoRetryStrategy`` variant keeps
 retry-free tests instant, while retry tests inject a fake ``sleep``.
 """
+
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,5 @@
 """DAO for basket endpoints (``/rest/basket``, ``/api/BasketItems``)."""
+
 from __future__ import annotations
 
 from typing import Any

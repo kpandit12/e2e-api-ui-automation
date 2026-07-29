@@ -9,6 +9,7 @@ unique account (see ``builders.user_builder.UserBuilder``) rather than
 sharing a logged-in session, since Juice Shop ties baskets/orders to the
 account, not a fixed admin login.
 """
+
 from __future__ import annotations
 
 import logging

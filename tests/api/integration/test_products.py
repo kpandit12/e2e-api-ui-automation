@@ -1,4 +1,5 @@
 """Integration tests for product search (``GET /rest/products/search``)."""
+
 from __future__ import annotations
 
 import allure

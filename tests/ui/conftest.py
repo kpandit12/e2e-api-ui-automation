@@ -6,12 +6,15 @@ the API layer's "own resources per test" parallel-safety rule). This module
 wires that ``page`` into our Page Objects and reads ``headless``/``browser``
 from :mod:`config.settings` instead of hardcoding them.
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Any
 
+import allure
 import pytest
-from playwright.sync_api import Page
+from playwright.sync_api import ConsoleMessage, Page
 
 from config.settings import get_settings
 from pages.basket_page import BasketPage
@@ -64,3 +67,47 @@ def product_page(page: Page, ui_base_url: str) -> ProductPage:
 @pytest.fixture()
 def basket_page(page: Page, ui_base_url: str) -> BasketPage:
     return BasketPage(page, ui_base_url)
+
+
+@pytest.fixture(autouse=True)
+def _console_log_collector(page: Page) -> Iterator[None]:
+    """Collect browser console messages so they can be attached on failure."""
+    logs: list[str] = []
+    # Storing the list on the page object keeps it scoped to this test.
+    page._console_logs = logs  # type: ignore[attr-defined]
+
+    def _handler(msg: ConsoleMessage) -> None:
+        logs.append(f"{msg.type}: {msg.text}")
+
+    page.on("console", _handler)
+    yield
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item: Any, call: Any) -> Any:
+    """Attach screenshot, page HTML, and console logs to Allure on failure."""
+    outcome = yield
+    report = outcome.get_result()
+    if report.when == "call" and report.failed:
+        page: Page | None = item.funcargs.get("page")
+        if page is not None:
+            try:
+                allure.attach(
+                    page.screenshot(full_page=True),
+                    name="failure_screenshot",
+                    attachment_type=allure.attachment_type.PNG,
+                )
+                allure.attach(
+                    page.content(),
+                    name="page_html",
+                    attachment_type=allure.attachment_type.HTML,
+                )
+                logs: list[str] = getattr(page, "_console_logs", [])
+                if logs:
+                    allure.attach(
+                        "\n".join(logs),
+                        name="browser_console_logs",
+                        attachment_type=allure.attachment_type.TEXT,
+                    )
+            except Exception:
+                pass

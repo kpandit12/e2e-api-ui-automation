@@ -1,0 +1,19 @@
+name: Wait for Juice Shop
+description: Poll localhost:3000 until Juice Shop is ready.
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for Juice Shop
+      shell: bash
+      run: |
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:3000/rest/products/search?q=apple >/dev/null; then
+            echo "Juice Shop is ready"
+            exit 0
+          fi
+          echo "Waiting for Juice Shop... ($i/30)"
+          sleep 2
+        done
+        echo "Juice Shop did not become reachable" >&2
+        exit 1

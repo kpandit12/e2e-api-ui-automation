@@ -1,4 +1,5 @@
 """DAO for ``GET /rest/products/search``."""
+
 from __future__ import annotations
 
 from clients.rest_client import ApiResponse, RestClient

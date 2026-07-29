@@ -5,9 +5,8 @@ Juice Shop quirk every page has to deal with: a cookie-consent banner and a
 "Welcome Banner" dialog that pop up on first load and block interaction until
 dismissed.
 """
-from __future__ import annotations
 
-import contextlib
+from __future__ import annotations
 
 from playwright.sync_api import Page
 
@@ -28,17 +27,16 @@ class BasePage:
         """Close the welcome dialog and cookie-consent banner if present.
 
         Both are best-effort: they only appear on a fresh session, so absence
-        is not an error.
+        is not an error. Each locator is given a short window to appear so a
+        slow-loading Angular overlay is still dismissed.
         """
-        welcome_close = self.page.locator(
-            "button.mat-dialog-close, [aria-label='Close Welcome Banner']"
-        )
-        if welcome_close.count() > 0:
-            with contextlib.suppress(Exception):
-                welcome_close.first.click(timeout=2000)
-        cookie_dismiss = self.page.locator(
-            "#cookieconsent [aria-label='dismiss cookie message']"
-        )
-        if cookie_dismiss.count() > 0:
-            with contextlib.suppress(Exception):
-                cookie_dismiss.first.click(timeout=2000)
+        for selector in (
+            "button.mat-dialog-close, [aria-label='Close Welcome Banner']",
+            "#cookieconsent [aria-label='dismiss cookie message']",
+        ):
+            locator = self.page.locator(selector)
+            try:
+                locator.first.wait_for(state="visible", timeout=2000)
+                locator.first.click(timeout=2000)
+            except Exception:
+                pass

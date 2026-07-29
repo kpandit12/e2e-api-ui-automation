@@ -1,4 +1,5 @@
 """Unit tests for the retry Strategy implementations (no network)."""
+
 from unittest.mock import Mock
 
 import pytest

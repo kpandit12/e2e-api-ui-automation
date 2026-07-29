@@ -1,4 +1,5 @@
 """E2E: register a new account through the real UI form."""
+
 from __future__ import annotations
 
 import allure

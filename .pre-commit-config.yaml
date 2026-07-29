@@ -19,10 +19,18 @@ repos:
         name: mypy (strict)
         additional_dependencies:
           - pydantic>=2
+          - pydantic-settings>=2
+          - playwright>=1.49
           - types-jsonschema
         args: ["--config-file=pyproject.toml"]
         # Type-check the framework source; tests are relaxed via pyproject overrides.
         files: ^(clients|core|dao|utils|models|builders|pages|config)/
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.29.4
+    hooks:
+      - id: check-github-workflows
+        name: validate GitHub Actions workflows
 
   - repo: local
     hooks:

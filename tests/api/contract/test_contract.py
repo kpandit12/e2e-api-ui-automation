@@ -4,6 +4,7 @@ Unlike the integration tests (which assert behaviour), these fail loudly the
 moment Juice Shop changes its response shape, independent of whether the
 specific values under test are otherwise correct.
 """
+
 from __future__ import annotations
 
 import json
@@ -34,7 +35,9 @@ def test_product_search_response_matches_schema(client: RestClient) -> None:
 def test_login_response_matches_schema(client: RestClient) -> None:
     new_user = UserBuilder().build()
     user_dao.register(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     response = auth_dao.login_response(client, new_user.email, new_user.password)

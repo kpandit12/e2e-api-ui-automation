@@ -6,6 +6,7 @@ line can be correlated to a specific request via a ``request_id``. A
 every function signature, which also keeps it correct under pytest-xdist
 workers and threads.
 """
+
 from __future__ import annotations
 
 import logging

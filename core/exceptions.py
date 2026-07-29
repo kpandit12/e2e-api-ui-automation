@@ -10,6 +10,7 @@ Thin subclasses (``ResourceNotFoundError`` etc.) are retained so callers may
 also ``except`` a specific error type when that reads better; the DAO chooses
 the most specific subclass automatically via :meth:`ApiError.from_response`.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -84,9 +85,7 @@ class ApiError(Exception):
             subclass = ServerError
         else:
             subclass = cls
-        return subclass(
-            status, body, message=message, request_id=request_id
-        )
+        return subclass(status, body, message=message, request_id=request_id)
 
     def __str__(self) -> str:  # pragma: no cover - trivial formatting
         parts = [self.message]

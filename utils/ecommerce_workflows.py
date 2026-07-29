@@ -7,6 +7,7 @@ intentionally spans both layers to demonstrate a hybrid flow (a common
 real-world pattern: seed state through whichever surface is faster/most
 reliable, then verify through the other).
 """
+
 from __future__ import annotations
 
 from clients.rest_client import RestClient

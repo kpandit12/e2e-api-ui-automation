@@ -4,6 +4,7 @@ Juice Shop returns HTTP 200 with ``{"authentication": {"token": ...}}`` on
 success and HTTP 401 with an error body on bad credentials, so :func:`login`
 can branch on the status code.
 """
+
 from __future__ import annotations
 
 from clients.rest_client import ApiResponse, RestClient
@@ -13,9 +14,7 @@ from models.auth import Authentication, LoginResponse
 
 def login_response(client: RestClient, email: str, password: str) -> ApiResponse:
     """``POST /rest/user/login`` returning the raw response (for negative tests)."""
-    return client.post(
-        "/rest/user/login", json={"email": email, "password": password}
-    )
+    return client.post("/rest/user/login", json={"email": email, "password": password})
 
 
 def authenticate(client: RestClient, email: str, password: str) -> Authentication:
@@ -28,7 +27,8 @@ def authenticate(client: RestClient, email: str, password: str) -> Authenticatio
     response = login_response(client, email, password)
     if not response.ok:
         raise ApiError.from_response(
-            response.status_code, response.json or response.text,
+            response.status_code,
+            response.json or response.text,
             request_id=response.request_id,
         )
     return LoginResponse(**response.json).authentication

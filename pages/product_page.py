@@ -1,4 +1,5 @@
 """Page Object for the product listing/search screen (``/#/search``)."""
+
 from __future__ import annotations
 
 from playwright.sync_api import Page
@@ -34,6 +35,10 @@ class ProductPage(BasePage):
         self.search_input.click(force=True)
         self.search_input.fill(query)
         self.search_input.press("Enter")
+        # Give the Angular search a moment to render the grid. Networkidle waits
+        # until there are no network connections for ~500 ms, which is enough
+        # for Juice Shop's async catalogue search.
+        self.page.wait_for_load_state("networkidle", timeout=10000)
         return self
 
     def result_count(self) -> int:

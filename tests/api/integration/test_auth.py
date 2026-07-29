@@ -1,4 +1,5 @@
 """Integration tests for login/whoami (``POST /rest/user/login``, whoami)."""
+
 from __future__ import annotations
 
 import allure
@@ -38,6 +39,4 @@ def test_login_with_wrong_password_is_rejected(
 def test_whoami_without_token_is_rejected(client: RestClient) -> None:
     response = user_dao.whoami_response(client)
     attach_api_response("whoami without token", response)
-    assert response.status_code in (401, 403) or not (response.json or {}).get(
-        "user"
-    )
+    assert response.status_code in (401, 403) or not (response.json or {}).get("user")

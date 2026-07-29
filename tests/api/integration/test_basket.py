@@ -1,4 +1,5 @@
 """Integration tests for the basket flow (search -> add -> view -> delete)."""
+
 from __future__ import annotations
 
 import allure

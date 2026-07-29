@@ -1,4 +1,5 @@
 """Unit tests for the product DAO against a mocked transport."""
+
 import pytest
 import responses
 

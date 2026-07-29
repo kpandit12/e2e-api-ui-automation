@@ -1,4 +1,5 @@
 """DAO for user-account endpoints (``/api/Users``, ``/rest/user/whoami``)."""
+
 from __future__ import annotations
 
 from clients.rest_client import ApiResponse, RestClient

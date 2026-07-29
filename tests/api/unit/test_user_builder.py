@@ -1,4 +1,5 @@
 """Unit tests for the UserBuilder."""
+
 import pytest
 
 from builders.user_builder import UserBuilder
@@ -25,9 +26,6 @@ def test_with_email_overrides_default() -> None:
 @pytest.mark.unit
 def test_with_mismatched_repeat_produces_divergent_passwords() -> None:
     user = (
-        UserBuilder()
-        .with_password("pw12345")
-        .with_mismatched_repeat("other")
-        .build()
+        UserBuilder().with_password("pw12345").with_mismatched_repeat("other").build()
     )
     assert user.password != user.passwordRepeat

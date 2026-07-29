@@ -1,4 +1,5 @@
 """Unit tests for the user DAO against a mocked transport."""
+
 from typing import Any
 
 import pytest

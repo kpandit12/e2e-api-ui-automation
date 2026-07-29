@@ -1,4 +1,5 @@
 """Integration tests for account registration (``POST /api/Users/``)."""
+
 from __future__ import annotations
 
 import allure
@@ -19,7 +20,9 @@ def test_register_with_unique_email_succeeds(
     client: RestClient, new_user: NewUser
 ) -> None:
     response = user_dao.register_response(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     attach_api_response("register response", response)
@@ -31,7 +34,9 @@ def test_register_with_unique_email_succeeds(
 @pytest.mark.integration
 def test_registered_account_can_log_in(client: RestClient, new_user: NewUser) -> None:
     user_dao.register(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     token = auth_dao.login(client, new_user.email, new_user.password)
@@ -43,12 +48,16 @@ def test_registered_account_can_log_in(client: RestClient, new_user: NewUser) ->
 @pytest.mark.integration
 def test_duplicate_email_is_rejected(client: RestClient, new_user: NewUser) -> None:
     user_dao.register(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     with pytest.raises(ApiError) as exc:
         user_dao.register(
-            client, new_user.email, new_user.password,
+            client,
+            new_user.email,
+            new_user.password,
             password_repeat=new_user.passwordRepeat,
         )
     assert exc.value.is_bad_request() or exc.value.is_conflict()
@@ -69,7 +78,9 @@ def test_mismatched_password_repeat_is_not_validated_server_side(
     """
     bad_user = UserBuilder().with_mismatched_repeat("something-else").build()
     user_id = user_dao.register(
-        client, bad_user.email, bad_user.password,
+        client,
+        bad_user.email,
+        bad_user.password,
         password_repeat=bad_user.passwordRepeat,
     )
     assert user_id > 0

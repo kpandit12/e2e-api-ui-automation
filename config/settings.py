@@ -17,6 +17,7 @@ split) can override just one.
 process-scoped Singleton: the ``.env`` file is parsed exactly once and every
 caller shares the same immutable instance.
 """
+
 from functools import lru_cache
 from typing import Literal
 

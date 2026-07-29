@@ -5,6 +5,7 @@ implementation. This lets a caller inject exponential backoff in production, a
 no-op strategy in unit tests (so mocked requests run instantly), or a custom
 policy per client -- all without editing ``RestClient``.
 """
+
 from __future__ import annotations
 
 import time

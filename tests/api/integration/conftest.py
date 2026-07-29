@@ -5,6 +5,7 @@ the contract layer). This module adds a ``registered_user`` fixture: a fresh
 account + authenticated session, created per test for parallel safety
 (pytest-xdist) since every test gets its own unique email/basket.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -35,14 +36,14 @@ def new_user() -> NewUser:
 
 
 @pytest.fixture()
-def registered_user(
-    client: RestClient, new_user: NewUser
-) -> Iterator[RegisteredUser]:
+def registered_user(client: RestClient, new_user: NewUser) -> Iterator[RegisteredUser]:
     """Register ``new_user`` via the API and log in, attaching the token to
     ``client`` so DAO calls made with it are authenticated automatically.
     """
     user_dao.register(
-        client, new_user.email, new_user.password,
+        client,
+        new_user.email,
+        new_user.password,
         password_repeat=new_user.passwordRepeat,
     )
     auth = auth_dao.authenticate(client, new_user.email, new_user.password)
