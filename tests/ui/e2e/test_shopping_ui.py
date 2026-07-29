@@ -1,6 +1,8 @@
 """E2E: search the catalogue and add an item to the basket through the UI."""
 from __future__ import annotations
 
+import uuid
+
 import allure
 import pytest
 from playwright.sync_api import expect
@@ -36,5 +38,6 @@ def test_adding_a_product_to_basket_increments_cart(
 @pytest.mark.ui
 def test_searching_for_nonsense_shows_no_results(product_page: ProductPage) -> None:
     product_page.open()
-    product_page.search("zzzznonexistentquery9999")
+    # A random UUID string is extremely unlikely to match any product data.
+    product_page.search(str(uuid.uuid4()))
     assert product_page.result_count() == 0
