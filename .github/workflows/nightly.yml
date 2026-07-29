@@ -1,0 +1,53 @@
+name: Nightly Regression & Mutation
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # 03:00 UTC daily
+  workflow_dispatch: {}
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # Full regression sweep across all markers against the live API.
+  full-regression:
+    name: Full regression
+    runs-on: ubuntu-latest
+    env:
+      PROFILE: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run full suite
+        run: |
+          pytest -n auto \
+            --reruns 3 --reruns-delay 5 \
+            --alluredir=./allure-results \
+            --junitxml=results-nightly.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-nightly
+          path: allure-results
+
+  # Mutation testing validates that the UNIT suite would actually catch a
+  # broken implementation. Runs only against framework source, not the tests.
+  mutation:
+    name: Mutation testing (mutmut)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Run mutmut
+        run: |
+          mutmut run || true      # non-zero exit when mutants survive; report below
+      - name: Mutation results
+        run: mutmut results

@@ -1,0 +1,28 @@
+# -- Runtime ---------------------------------------------------------------- #
+requests==2.32.3
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+
+# -- Test framework & execution -------------------------------------------- #
+pytest==8.3.4
+pytest-xdist==3.6.1
+pytest-rerunfailures==15.0
+allure-pytest==2.13.5
+
+# -- Test data & generation ------------------------------------------------- #
+polyfactory==2.18.1
+hypothesis==6.122.3
+
+# -- Client-layer unit tests (mocked transport) ---------------------------- #
+responses==0.25.3
+
+# -- Contract testing ------------------------------------------------------- #
+jsonschema==4.23.0
+
+# -- UI automation ------------------------------------------------------------ #
+playwright==1.49.1
+pytest-playwright==0.6.2
+
+# NOTE: retries are hand-rolled via the Strategy pattern in core/retry_strategy.py,
+# so tenacity is intentionally not a dependency.

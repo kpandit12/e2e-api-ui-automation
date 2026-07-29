@@ -1,0 +1,34 @@
+# Pre-commit hooks: lint, format, type-check, and run smoke tests on commit.
+# Install with: pre-commit install
+minimum_pre_commit_version: "3.5.0"
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        args: [--fix]
+      - id: ruff-format
+        name: ruff (format)
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.0
+    hooks:
+      - id: mypy
+        name: mypy (strict)
+        additional_dependencies:
+          - pydantic>=2
+          - types-jsonschema
+        args: ["--config-file=pyproject.toml"]
+        # Type-check the framework source; tests are relaxed via pyproject overrides.
+        files: ^(clients|core|dao|utils|models|builders|pages|config)/
+
+  - repo: local
+    hooks:
+      - id: pytest-smoke
+        name: pytest -m unit (offline, no browser/network)
+        entry: python -m pytest tests/api/unit -m "unit" -q
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Juice Shop login response",
+  "type": "object",
+  "required": ["authentication"],
+  "properties": {
+    "authentication": {
+      "type": "object",
+      "required": ["token"],
+      "properties": {
+        "token": { "type": "string" },
+        "bid": { "type": ["integer", "null"] },
+        "umail": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

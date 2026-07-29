@@ -1,0 +1,8 @@
+# Developer tooling: linting, typing, mutation testing, pre-commit.
+-r requirements.txt
+
+ruff==0.8.4
+mypy==1.14.0
+pre-commit==4.0.1
+mutmut==2.5.1
+types-jsonschema==4.23.0.20240813

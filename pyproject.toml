@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests*", "data*"]
+
+[project]
+name = "e2e-api-ui-automation"
+version = "1.0.0"
+description = "Layered API + UI test-automation framework (RestClient/DAO/Pages, Utility, Test) for OWASP Juice Shop."
+readme = "README.md"
+requires-python = ">=3.10"
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "smoke: minimal fast checks that the happy path works",
+    "regression: broader behavioural coverage",
+    "negative: error-path and invalid-input coverage",
+    "unit: fast, network-free tests of RestClient/DAO/builder logic (mocked transport)",
+    "integration: API tests that hit the live Juice Shop REST API",
+    "contract: schema/contract tests guarding the provider response shape",
+    "ui: Playwright end-to-end tests that drive the Juice Shop Angular UI",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff (lint + format)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+src = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "C4", "PL"]
+ignore = [
+    "E731",     # allow small lambdas in tests for readability
+    "PLR2004",  # magic values are acceptable in test assertions
+    "PLR0913",  # service methods legitimately take several kwargs
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004", "S101", "B011"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ---------------------------------------------------------------------------
+# mypy (strict)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_optional = true
+show_error_codes = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# Tests favour readability over exhaustive annotation; relax there only.
+# disallow_untyped_decorators is relaxed because @allure.feature(...) has no
+# type stubs and would otherwise flag every decorated test as untyped.
+module = ["tests.*", "tests.*.*", "tests.*.*.*", "tests.*.*.*.*"]
+disallow_untyped_defs = false
+disallow_untyped_decorators = false
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "allure.*",
+    "responses.*",
+    "polyfactory.*",
+    "jsonschema.*",
+    "requests",
+    "requests.*",
+    "playwright.*",
+]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# mutmut (mutation testing of the framework's own code, not the tests)
+# ---------------------------------------------------------------------------
+[tool.mutmut]
+paths_to_mutate = "clients/,core/,dao/,utils/,models/,builders/"
+tests_dir = "tests/api/unit/"
+runner = "python -m pytest tests/api/unit -x -q"
